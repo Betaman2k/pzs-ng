@@ -619,10 +619,17 @@ namespace eval ::ngBot {
 					if {$cnt2 == 0} {
 						append output2 "$announce(${event}_LOOP${loop})"
 					}
-					if {[string match "*speed" [lindex $vari $cnt2]]} {
-						set output2 [${ns}::replacevar $output2 [lindex $vari $cnt2] [${ns}::format_speed $value $section]]
+					set varname [lindex $vari $cnt2]
+					if {[string match "*speed" $varname]} {
+						set output2 [${ns}::replacevar $output2 $varname [${ns}::format_speed $value $section]]
+					} elseif {[string match "*_mbytes" $varname]} {
+						# Replace the mbytes variable normally
+						set output2 [${ns}::replacevar $output2 $varname $value]
+						# Also create a formatted size variable
+						set sizevar [string map {"_mbytes" "_size"} $varname]
+						set output2 [${ns}::replacevar $output2 $sizevar [${ns}::format_size_smart $value]]
 					} else {
-						set output2 [${ns}::replacevar $output2 [lindex $vari $cnt2] $value]
+						set output2 [${ns}::replacevar $output2 $varname $value]
 					}
 					incr cnt2
 					if {[string equal "" [lindex $vari $cnt2]]} {
@@ -639,6 +646,12 @@ namespace eval ::ngBot {
 			} else {
 				if {[string match "*speed" $vari]} {
 					set output [${ns}::replacevar $output $vari [${ns}::format_speed [lindex $line $cnt] $section]]
+				} elseif {[string match "*_mbytes" $vari]} {
+					# Replace the mbytes variable normally
+					set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
+					# Also create a formatted size variable (%t_size for %t_mbytes, etc.)
+					set sizevar [string map {"_mbytes" "_size"} $vari]
+					set output [${ns}::replacevar $output $sizevar [${ns}::format_size_smart [lindex $line $cnt]]]
 				} else {
 					set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
 				}
@@ -679,6 +692,27 @@ namespace eval ::ngBot {
 			} elseif {[istrue $round]} {break}
 		}
 		return [format "%.*f%s" $dec $amount $unit]
+	}
+
+	proc format_size_smart {mbytes} {
+		if {![string is double -strict $mbytes] && ![string is integer -strict $mbytes]} {
+			return "${mbytes}MB"
+		}
+
+		set mb [expr {double($mbytes)}]
+
+		if {$mb >= 1024.0} {
+			set gb [expr {$mb / 1024.0}]
+			set formatted [format "%.2f" $gb]
+			regsub {^([0-9]+)([0-9]{3})\.(..)} $formatted {\1,\2.\3} formatted
+			return "${formatted}GB"
+		} else {
+			set formatted [format "%.0f" $mb]
+			if {[string length $formatted] >= 4} {
+				regsub {^([0-9]+)([0-9]{3})$} $formatted {\1,\2} formatted
+			}
+			return "${formatted}MB"
+		}
 	}
 
 	proc format_speed {value section} {
