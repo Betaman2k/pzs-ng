@@ -629,13 +629,15 @@ namespace eval ::ngBot {
 						set sizevar [string map {"_mbytes" "_size"} $varname]
 						set output2 [${ns}::replacevar $output2 $sizevar [${ns}::format_size_smart $value]]
 					} elseif {[string match "*duration" $varname]} {
-						set output2 [${ns}::replacevar $output2 $varname $value]
 						if {[string match "*|*" $value]} {
 							set parts [split $value "|"]
 							set seconds_var "${varname}_seconds"
 							set hms_var "${varname}_hms"
 							set output2 [${ns}::replacevar $output2 $seconds_var [lindex $parts 0]]
 							set output2 [${ns}::replacevar $output2 $hms_var [lindex $parts 1]]
+							set output2 [${ns}::replacevar $output2 $varname $value]
+						} else {
+							set output2 [${ns}::replacevar $output2 $varname $value]
 						}
 					} else {
 						set output2 [${ns}::replacevar $output2 $varname $value]
@@ -660,16 +662,18 @@ namespace eval ::ngBot {
 					set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
 					# Also create a formatted size variable (%t_size for %t_mbytes, etc.)
 					set sizevar [string map {"_mbytes" "_size"} $vari]
+					set output [${ns}::replacevar $output $sizevar [${ns}::format_size_smart [lindex $line $cnt]]]
 				} elseif {[string match "*duration" $vari]} {
-					set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
 					if {[string match "*|*" [lindex $line $cnt]]} {
 						set parts [split [lindex $line $cnt] "|"]
 						set seconds_var "${vari}_seconds"
 						set hms_var "${vari}_hms"
 						set output [${ns}::replacevar $output $seconds_var [lindex $parts 0]]
 						set output [${ns}::replacevar $output $hms_var [lindex $parts 1]]
+						set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
+					} else {
+						set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
 					}
-					set output [${ns}::replacevar $output $sizevar [${ns}::format_size_smart [lindex $line $cnt]]]
 				} else {
 					set output [${ns}::replacevar $output $vari [lindex $line $cnt]]
 				}
