@@ -884,6 +884,19 @@ force_sfv_first <TRUE|FALSE>
 	to TRUE will do the latter.
 	Default: FALSE
 
+sfv_late_threshold <INT>
+	If you allow files before the SFV, a late SFV can otherwise inflate
+	the reported COMPLETE duration/speed. Set this to the amount of
+	seconds that may elapse between the last data file and the SFV before
+	the zipscript rewinds stop_time to the data file. Set to 0 to disable.
+	Default: 0
+
+sfv_late_min_files <INT>
+	Minimum number of files that must have been processed before the SFV
+	for the above late SFV handling (and the SFV_LATE announce) to trigger.
+	Useful to avoid “late” notices when only a single file landed early.
+	Default: 1
+
 get_competitor_list <TRUE|FALSE>
 	This setting, if set to TRUE, will put a list of all racers
 	excluding the current user into a special cookie.
@@ -1746,4 +1759,3 @@ zsinternal_checks_completed <STRING>
 	Output in benchmark mode.
 	In default value, %0.6f = six digits number of seconds.
 	Default: "Checks completed in %0.6f seconds.\n"
-

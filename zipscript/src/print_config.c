@@ -675,6 +675,12 @@ printf("#define min_halfway_files                         %s\n", stringify(min_h
 #ifndef min_halfway_size_is_defaulted
 printf("#define min_halfway_size                          %s\n", stringify(min_halfway_size));
 #endif
+#ifndef sfv_late_threshold_is_defaulted
+printf("#define sfv_late_threshold                        %s\n", stringify(sfv_late_threshold));
+#endif
+#ifndef sfv_late_min_files_is_defaulted
+printf("#define sfv_late_min_files                       %s\n", stringify(sfv_late_min_files));
+#endif
 #ifndef min_newleader_files_is_defaulted
 printf("#define min_newleader_files                       %s\n", stringify(min_newleader_files));
 #endif
@@ -1148,6 +1154,7 @@ printf("#define message_user_footer                       %s\n", (message_user_f
 printf("#define message_user_header                       %s\n", (message_user_header == DISABLED ? "DISABLED" : stringify(message_user_header)));
 printf("#define min_halfway_files                         %s\n", stringify(min_halfway_files));
 printf("#define min_halfway_size                          %s\n", stringify(min_halfway_size));
+printf("#define sfv_late_threshold                        %s\n", stringify(sfv_late_threshold));
 printf("#define min_newleader_files                       %s\n", stringify(min_newleader_files));
 printf("#define min_newleader_size                        %s\n", stringify(min_newleader_size));
 printf("#define min_update_files                          %s\n", stringify(min_update_files));

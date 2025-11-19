@@ -99,6 +99,7 @@
 #define other_announce_sfv_type				"SFV_OTHER"
 #define audio_announce_sfv_type				"SFV_AUDIO"
 #define general_announce_sfv_type			"SFV"
+#define general_announce_late_sfv_type			"SFV_LATE"
 #define general_doublesfv_type				"DOUBLESFV"
 #define general_resumesfv_type				"RESUMESFV"
 #define general_badgenre_type				"BADGENRE"

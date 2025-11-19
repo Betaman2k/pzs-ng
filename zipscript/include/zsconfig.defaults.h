@@ -1034,6 +1034,14 @@
 #define min_halfway_size_is_defaulted
 #define min_halfway_size                          10
 #endif
+#ifndef sfv_late_threshold
+#define sfv_late_threshold_is_defaulted
+#define sfv_late_threshold                        0
+#endif
+#ifndef sfv_late_min_files
+#define sfv_late_min_files_is_defaulted
+#define sfv_late_min_files                       1
+#endif
 
 #ifndef min_newleader_files
 #define min_newleader_files_is_defaulted
@@ -1434,4 +1442,3 @@
 #define zsinternal_checks_completed_is_defaulted
 #define zsinternal_checks_completed               "Checks completed in %0.6f seconds.\n"
 #endif
-

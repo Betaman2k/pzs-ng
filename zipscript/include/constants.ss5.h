@@ -98,6 +98,7 @@
 #define other_announce_sfv_type				"SFV"
 #define video_announce_sfv_type				"SFV"
 #define general_announce_sfv_type			"SFV"
+#define general_announce_late_sfv_type			"SFV_LATE"
 #define general_badgenre_type				"BADGENRE"
 #define general_badyear_type				"BADYEAR"
 #define general_badbitrate_type				"BADBITRATE"

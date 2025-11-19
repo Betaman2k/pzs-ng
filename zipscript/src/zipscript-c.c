@@ -51,6 +51,55 @@
 #include "strsep.h"
 #endif
 
+static long
+timediff_seconds(struct timeval newer, struct timeval older)
+{
+	long sec = newer.tv_sec - older.tv_sec;
+	long usec = newer.tv_usec - older.tv_usec;
+
+	if (usec < 0) {
+		usec += 1000000;
+		sec -= 1;
+	}
+
+	if (sec < 0)
+		return 0;
+
+	if (usec > 0)
+		sec += 1;
+
+	return sec;
+}
+
+static void
+maybe_adjust_stop_time_for_late_sfv(struct VARS *vars)
+{
+	if (sfv_late_threshold <= 0)
+		return;
+
+	if (vars->total.files_missing != 0)
+		return;
+
+	if (vars->total.data_stop_time.tv_sec == 0 && vars->total.data_stop_time.tv_usec == 0)
+		return;
+
+	if (vars->total.stop_time.tv_sec < vars->total.data_stop_time.tv_sec ||
+	    (vars->total.stop_time.tv_sec == vars->total.data_stop_time.tv_sec &&
+	     vars->total.stop_time.tv_usec <= vars->total.data_stop_time.tv_usec))
+		return;
+
+	{
+		long delta = timediff_seconds(vars->total.stop_time, vars->total.data_stop_time);
+
+		if (delta < sfv_late_threshold)
+			return;
+
+		vars->total.stop_time = vars->total.data_stop_time;
+		vars->total.sfv_late = 1;
+		d_log("zipscript-c: SFV arrived %lds after last data file - adjusting stop_time\n", delta);
+	}
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -72,6 +121,7 @@ main(int argc, char **argv)
 	char           *update_msg = 0;
 	char           *race_msg = 0;
 	char           *sfv_msg = 0;
+	char           *late_sfv_msg = 0;
 	char           *update_type = 0;
 	char           *newleader_msg = 0;
 	char           *halfway_msg = 0;
@@ -791,6 +841,8 @@ main(int argc, char **argv)
 
 		case 1:	/* SFV CHECK */
 			d_log("zipscript-c: File type is: SFV\n");
+			int sfv_after_files = 0;
+			int files_processed_before_sfv = 0;
 			if ((matchpath(sfv_dirs, g.l.path)) || (matchpath(group_dirs, g.l.path))  ) {
 				d_log("zipscript-c: Directory matched with sfv_dirs/group_dirs\n");
 			} else {
@@ -897,11 +949,11 @@ main(int argc, char **argv)
 
 			d_log("zipscript-c: Setting message pointers\n");
 			sfv_type = general_announce_sfv_type;
-			switch (g.v.misc.release_type) {
-			case RTYPE_RAR:
-				sfv_msg = rar_sfv;
-				sfv_type = rar_announce_sfv_type;
-				break;
+				switch (g.v.misc.release_type) {
+				case RTYPE_RAR:
+					sfv_msg = rar_sfv;
+					sfv_type = rar_announce_sfv_type;
+					break;
 			case RTYPE_OTHER:
 				sfv_msg = other_sfv;
 				sfv_type = other_announce_sfv_type;
@@ -914,12 +966,13 @@ main(int argc, char **argv)
 				sfv_msg = video_sfv;
 				sfv_type = video_announce_sfv_type;
 				break;
-			default :
-				sfv_msg = rar_sfv;
-				sfv_type = rar_announce_sfv_type;
-				d_log("zipscript-c: WARNING! Not a known release type - Contact the authors! (1:%d)\n", g.v.misc.release_type);
-				break;
-			}
+				default :
+					sfv_msg = rar_sfv;
+					sfv_type = rar_announce_sfv_type;
+					d_log("zipscript-c: WARNING! Not a known release type - Contact the authors! (1:%d)\n", g.v.misc.release_type);
+					break;
+				}
+				late_sfv_msg = sfv_msg;
 
 			if (!sfv_msg)
 				d_log("zipscript-c: Something's messed up - sfv_msg not set!\n");
@@ -939,25 +992,41 @@ main(int argc, char **argv)
 					}
 				}
 			} else if ((g.v.total.files_missing == 0) && (g.v.total.files > 0)) {
+				maybe_adjust_stop_time_for_late_sfv(&g.v);
 				/* Release complete, get a random (first in the sfvdata) file
 				 * and get the relevant info from it to be used in the cookies.
 				 */
-				char *filename = get_first_filename_from_sfvdata(g.l.sfv);
-				d_log("zipscript-c: SFV received after all files, and all files present.\n");
-				switch (g.v.misc.release_type) {
-				case RTYPE_RAR:
-					get_rar_info(filename, &g.v);
+					char *filename = get_first_filename_from_sfvdata(g.l.sfv);
+					d_log("zipscript-c: SFV received after all files, and all files present.\n");
+					switch (g.v.misc.release_type) {
+					case RTYPE_RAR:
+						get_rar_info(filename, &g.v);
 					break;
 				case RTYPE_AUDIO:
 					get_audio_info(filename, &g.v.audio);
 					break;
 				default:
 					break;
+					}
+					ng_free(filename);
 				}
-				ng_free(filename);
-			}
 
-			break;
+				files_processed_before_sfv = g.v.total.files - g.v.total.files_missing;
+				if (g.v.total.files_missing == 0) {
+					maybe_adjust_stop_time_for_late_sfv(&g.v);
+					if (files_processed_before_sfv >= sfv_late_min_files) {
+						sfv_after_files = 1;
+					} else {
+						sfv_after_files = 0;
+					}
+				}
+
+				if (sfv_after_files && late_sfv_msg != NULL) {
+					d_log("zipscript-c: SFV arrived after other files - logging late sfv announce\n");
+					writelog(&g, convert(&g.v, g.ui, g.gi, late_sfv_msg), general_announce_late_sfv_type);
+				}
+
+				break;
 			/* END OF SFV CHECK */
 
 		case 2:	/* NFO CHECK */
@@ -1932,4 +2001,3 @@ main(int argc, char **argv)
 	d_log("zipscript-c: Exit %d\n", exit_value);
 	return exit_value;
 }
-

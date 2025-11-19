@@ -175,6 +175,7 @@ announce.SFV_AUDIO                      = "[%section] .: %b{%reldir} � Expecti
 announce.SFV_OTHER                      = "[%section] .: %b{%relname} � Expecting %b{%t_filecount}F :."
 announce.SFV_RAR                        = "[%section] .: %b{%relname} � Expecting %b{%t_filecount}F :."
 announce.SFV_VIDEO                      = "[%section] .: %b{%relname} � Expecting %b{%t_filecount}F :."
+announce.SFV_LATE                       = "[%section] .: %b{%relname} � Late SFV from %b{%u_name}�%g_name :."
 announce.UPDATE_CBR                     = "[%section] .: %b{%reldir} � Expecting %b{%t_files}F of %b{%bitrate}kbps %b{%genre} from %b{%year} :."
 announce.UPDATE_VBR                     = "[%section] .: %b{%reldir} � Expecting %b{%t_files}F of %b{%bitrate}kbps %b{%genre} from %b{%year} :."
 announce.UPDATE_ZIP                     = "[%section] .: %b{%reldir} � %b{%u_name}�%g_name pwns @ %u_speed � Expecting %b{%t_mbytes}MB :."

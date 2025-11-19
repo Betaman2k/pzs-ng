@@ -39,6 +39,57 @@
 # include "strl/strl.h"
 #endif
 
+static int
+filename_is_sfv(const char *name)
+{
+	char *ext = find_last_of((char *)name, ".");
+
+	if (*ext == '.')
+		ext++;
+
+	if (!*ext)
+		return 0;
+
+	return (strcasecmp(ext, "sfv") == 0);
+}
+
+static int
+timeval_is_zero(struct timeval tv)
+{
+	return tv.tv_sec == 0 && tv.tv_usec == 0;
+}
+
+static int
+timeval_after(struct timeval a, struct timeval b)
+{
+	if (a.tv_sec > b.tv_sec)
+		return 1;
+	if (a.tv_sec < b.tv_sec)
+		return 0;
+	return (a.tv_usec > b.tv_usec);
+}
+
+static void
+update_data_stop_marker(struct VARS *raceI, const RACEDATA *rd)
+{
+	struct timeval stop;
+	unsigned int speed;
+	unsigned long duration;
+
+	if (filename_is_sfv(rd->fname))
+		return;
+
+	stop = rd->start_time;
+	speed = (rd->speed > 0) ? rd->speed : 1;
+	duration = rd->size / speed;
+	if (duration == 0)
+		duration = 1;
+	stop.tv_sec += duration;
+
+	if (timeval_is_zero(raceI->total.data_stop_time) || timeval_after(stop, raceI->total.data_stop_time))
+		raceI->total.data_stop_time = stop;
+}
+
 
 /*
  * Modified	: 02.19.2002 Author	: Dark0n3
@@ -812,6 +863,7 @@ readrace(const char *path, struct VARS *raceI, struct USERINFO **userI, struct G
 				case F_CHECKED:
 					updatestats(raceI, userI, groupI, rd.uname, rd.group,
 						    rd.size, (unsigned long)rd.speed, rd.start_time);
+					update_data_stop_marker(raceI, &rd);
 					break;
 				case F_BAD:
 					raceI->total.files_bad++;

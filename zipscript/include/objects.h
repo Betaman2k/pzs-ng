@@ -115,12 +115,14 @@ struct current_file {
 struct race_total {
 	struct timeval	start_time;
 	struct timeval	stop_time;
+	struct timeval	data_stop_time;
 	unsigned char	users;
 	unsigned char	groups;
 	int		files;
 	int		files_missing;
 	int		files_bad;
 	unsigned char	nfo_present;
+	unsigned char	sfv_late;
 	unsigned long	speed;
 	off_t		size;
 	off_t		bad_size;
